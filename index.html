@@ -20,6 +20,7 @@
     --line: #22201A22;
     --cream-text: #ECE8DC;
     --good: #3F6B4A;
+    --error: #C75A5A;
   }
   *{ box-sizing: border-box; }
   html,body{ margin:0; padding:0; }
@@ -79,11 +80,14 @@
     padding: 10px 18px;
     background: var(--bg-2);
     color: #ECE8DC88;
-    border: none;
+    border: 2px solid transparent;
     border-radius: 6px 6px 0 0;
     cursor: pointer;
     letter-spacing: 0.02em;
+    transition: all 0.2s ease;
   }
+  .tab:focus{ outline: none; border-color: var(--mustard); }
+  .tab:focus-visible{ outline: 2px solid var(--mustard); outline-offset: -2px; }
   .tab.active{
     background: var(--paper);
     color: var(--ink);
@@ -128,6 +132,13 @@
     color: var(--ink-soft);
     margin-top: 4px;
   }
+  .field .error{
+    font-size: 12px;
+    color: var(--error);
+    margin-top: 4px;
+    display: none;
+  }
+  .field.has-error .error{ display: block; }
   .input-money{
     display:flex;
     align-items:center;
@@ -135,6 +146,10 @@
     border: 1px solid var(--line);
     border-radius: 5px;
     overflow: hidden;
+    transition: border-color 0.2s ease;
+  }
+  .input-money.error{
+    border-color: var(--error);
   }
   .input-money span{
     padding: 10px 10px 10px 12px;
@@ -152,6 +167,9 @@
     background: transparent;
     color: var(--ink);
   }
+  .input-money input:focus, select.plain:focus{
+    background: #f9f9f9;
+  }
   select.plain{
     background: #fff;
     border: 1px solid var(--line);
@@ -159,6 +177,11 @@
     padding: 10px 12px;
     font-family: 'Work Sans', sans-serif;
     width: 100%;
+    cursor: pointer;
+    transition: border-color 0.2s ease, background 0.2s ease;
+  }
+  select.plain:focus{
+    border-color: var(--stamp);
   }
   .row2{
     display:grid;
@@ -183,7 +206,7 @@
     width: 100%;
     background: var(--stamp);
     color: var(--cream-text);
-    border: none;
+    border: 2px solid transparent;
     padding: 13px 16px;
     font-family: 'Space Mono', monospace;
     font-size: 14px;
@@ -191,8 +214,11 @@
     border-radius: 5px;
     cursor: pointer;
     letter-spacing: 0.03em;
+    transition: all 0.2s ease;
   }
   button.calc:hover{ background: var(--stamp-2); }
+  button.calc:focus{ outline: none; border-color: var(--mustard); }
+  button.calc:focus-visible{ outline: 2px solid var(--mustard); outline-offset: -2px; }
 
   .receipt{
     margin-top: 22px;
@@ -202,6 +228,13 @@
     position: relative;
   }
   .receipt.show{ display:block; }
+  .receipt.error{
+    background: #ffe8e8;
+    padding: 14px;
+    border-radius: 5px;
+    border-left: 4px solid var(--error);
+    color: var(--error);
+  }
   .r-line{
     display:flex;
     justify-content: space-between;
@@ -241,8 +274,10 @@
     cursor: pointer;
     letter-spacing: 0.02em;
     text-decoration: none;
+    transition: opacity 0.2s ease;
   }
   .download-btn:hover{ opacity: 0.9; }
+  .download-btn:focus{ outline: 2px solid var(--ink); outline-offset: 2px; }
 
   .paywall{
     border: 1px dashed var(--ink-soft);
@@ -303,37 +338,38 @@
   </header>
 
   <div class="notice">
-    <strong>Not tax advice.</strong> Sidework gives a rough estimate using standard rates for the current tax year. It doesn't know your full circumstances — always confirm your actual figures with HMRC / IRS or a qualified accountant before filing or paying.
+    <strong>Not tax advice.</strong> Sidework gives a rough estimate using standard rates for the current tax year. It doesn't know your full circumstances — always confirm your actual figures with a qualified tax adviser before filing.
   </div>
 
-  <div class="tabs">
-    <button class="tab active" data-tab="uk">🇬🇧 UK</button>
-    <button class="tab" data-tab="us">🇺🇸 USA</button>
+  <div class="tabs" role="tablist">
+    <button class="tab active" data-tab="uk" role="tab" aria-selected="true" aria-controls="panel-uk">🇬🇧 UK</button>
+    <button class="tab" data-tab="us" role="tab" aria-selected="false" aria-controls="panel-us">🇺🇸 USA</button>
   </div>
 
   <div class="sheet">
 
     <!-- UK PANEL -->
-    <div class="panel active" id="panel-uk">
+    <div class="panel active" id="panel-uk" role="tabpanel" aria-labelledby="tab-uk">
       <div class="stamp-mark">NOT TAX ADVICE</div>
       <h2 class="sheet-title">UK side hustle calculator</h2>
       <p class="sheet-sub">For Vinted, eBay, Etsy, Uber, Deliveroo & similar self-employed income — 2026/27 tax year, rest-of-UK rates.</p>
 
       <div class="field">
-        <label>Gross side hustle income this tax year</label>
-        <div class="input-money"><span>£</span><input type="number" id="uk-gross" placeholder="0" min="0" inputmode="decimal"></div>
+        <label for="uk-gross">Gross side hustle income this tax year</label>
+        <div class="input-money"><span>£</span><input type="number" id="uk-gross" placeholder="0" min="0" step="0.01" inputmode="decimal" required></div>
         <div class="hint">Total money in, before any expenses.</div>
+        <div class="error">Please enter a valid amount.</div>
       </div>
 
       <div class="field">
-        <label>Actual business expenses (optional)</label>
-        <div class="input-money"><span>£</span><input type="number" id="uk-expenses" placeholder="0" min="0" inputmode="decimal"></div>
+        <label for="uk-expenses">Actual business expenses (optional)</label>
+        <div class="input-money"><span>£</span><input type="number" id="uk-expenses" placeholder="0" min="0" step="0.01" inputmode="decimal"></div>
         <div class="hint">Sidework will use whichever is bigger — your expenses or the £1,000 trading allowance.</div>
       </div>
 
       <div class="field">
-        <label>Other taxable income this year (e.g. salary), if any</label>
-        <div class="input-money"><span>£</span><input type="number" id="uk-other" placeholder="0" min="0" inputmode="decimal"></div>
+        <label for="uk-other">Other taxable income this year (e.g. salary), if any</label>
+        <div class="input-money"><span>£</span><input type="number" id="uk-other" placeholder="0" min="0" step="0.01" inputmode="decimal"></div>
         <div class="hint">This affects which tax band your side hustle profit falls into. Leave at 0 if this is your only income.</div>
       </div>
 
@@ -343,25 +379,26 @@
     </div>
 
     <!-- US PANEL -->
-    <div class="panel" id="panel-us">
+    <div class="panel" id="panel-us" role="tabpanel" aria-labelledby="tab-us">
       <div class="stamp-mark">NOT TAX ADVICE</div>
       <h2 class="sheet-title">USA side hustle calculator</h2>
-      <p class="sheet-sub">For 1099 / gig income — 2026 federal tax year. Federal only; state tax isn't included.</p>
+      <p class="sheet-sub">For 1099 / gig income — 2026 federal tax year. Federal only; state tax isn't included (though you can select your state below for an estimate).</p>
 
       <div class="field">
-        <label>Gross side hustle income this year</label>
-        <div class="input-money"><span>$</span><input type="number" id="us-gross" placeholder="0" min="0" inputmode="decimal"></div>
+        <label for="us-gross">Gross side hustle income this year</label>
+        <div class="input-money"><span>$</span><input type="number" id="us-gross" placeholder="0" min="0" step="0.01" inputmode="decimal" required></div>
+        <div class="error">Please enter a valid amount.</div>
       </div>
 
       <div class="field">
-        <label>Business expenses (mileage, supplies, fees, etc.)</label>
-        <div class="input-money"><span>$</span><input type="number" id="us-expenses" placeholder="0" min="0" inputmode="decimal"></div>
+        <label for="us-expenses">Business expenses (mileage, supplies, fees, etc.)</label>
+        <div class="input-money"><span>$</span><input type="number" id="us-expenses" placeholder="0" min="0" step="0.01" inputmode="decimal"></div>
         <div class="hint">The US has no flat allowance like the UK — only actual, deductible expenses count.</div>
       </div>
 
       <div class="row2">
         <div class="field">
-          <label>Filing status</label>
+          <label for="us-status">Filing status</label>
           <select class="plain" id="us-status">
             <option value="single">Single</option>
             <option value="mfj">Married filing jointly</option>
@@ -369,15 +406,15 @@
           </select>
         </div>
         <div class="field">
-          <label>Other taxable income (e.g. W-2 job)</label>
-          <div class="input-money"><span>$</span><input type="number" id="us-other" placeholder="0" min="0" inputmode="decimal"></div>
+          <label for="us-other">Other taxable income (e.g. W-2 job)</label>
+          <div class="input-money"><span>$</span><input type="number" id="us-other" placeholder="0" min="0" step="0.01" inputmode="decimal"></div>
         </div>
       </div>
 
       <div class="field">
-        <label>State</label>
+        <label for="us-state">State</label>
         <select class="plain" id="us-state"></select>
-        <div class="hint">Optional — adds an estimated state tax line. Flat-rate states use their actual rate; graduated states use their top marginal rate as a simplified stand-in, so it can overstate tax at lower income levels.</div>
+        <div class="hint">Optional — adds an estimated state tax line. Flat-rate states use their actual rate; graduated states use their top marginal rate as a simplified estimate, so it may overstate tax for lower incomes.</div>
       </div>
 
       <button class="calc" onclick="calcUS()">Work it out</button>
@@ -388,7 +425,7 @@
   </div>
 
   <footer>
-    Sidework is a free estimator, not a filing service or professional adviser. Figures are based on published 2026 UK and US federal rates and thresholds and use simplified, standard assumptions (e.g. no Scottish tax bands, no state/local tax, no additional Medicare surtax, no personal allowance taper above £100k). Your actual liability may differ. Nothing on this page is tax, legal, or financial advice — for guidance specific to your situation, speak to HMRC, the IRS, or a qualified accountant.
+    Sidework is a free estimator, not a filing service or professional adviser. Figures are based on published 2026 UK and US federal rates and thresholds and use simplified, standard assumptions (e.g., no additional allowances, credits, or deductions beyond what's shown). Always verify with a qualified tax adviser or official tax tools before filing. Not liable for inaccuracies or missing circumstances. Use at your own risk.
   </footer>
 
 </div>
@@ -397,16 +434,42 @@
 function fmtGBP(n){ return '£' + n.toLocaleString('en-GB', {minimumFractionDigits:2, maximumFractionDigits:2}); }
 function fmtUSD(n){ return '$' + n.toLocaleString('en-US', {minimumFractionDigits:2, maximumFractionDigits:2}); }
 
-document.querySelectorAll('.tab').forEach(btn=>{
+// Tab navigation with proper a11y
+document.querySelectorAll('.tab').forEach((btn, idx)=>{
+  btn.id = btn.id || `tab-${btn.dataset.tab}`;
   btn.addEventListener('click', ()=>{
-    document.querySelectorAll('.tab').forEach(b=>b.classList.remove('active'));
+    // Remove active from all tabs and panels
+    document.querySelectorAll('.tab').forEach(b=>{
+      b.classList.remove('active');
+      b.setAttribute('aria-selected', 'false');
+    });
     document.querySelectorAll('.panel').forEach(p=>p.classList.remove('active'));
+    // Activate clicked tab and corresponding panel
     btn.classList.add('active');
+    btn.setAttribute('aria-selected', 'true');
     document.getElementById('panel-' + btn.dataset.tab).classList.add('active');
+  });
+  // Keyboard navigation (arrow keys)
+  btn.addEventListener('keydown', (e)=>{
+    const tabs = Array.from(document.querySelectorAll('.tab'));
+    const currentIdx = tabs.indexOf(btn);
+    let targetBtn = null;
+    if(e.key === 'ArrowRight' || e.key === 'ArrowDown'){
+      targetBtn = tabs[(currentIdx + 1) % tabs.length];
+      e.preventDefault();
+    } else if(e.key === 'ArrowLeft' || e.key === 'ArrowUp'){
+      targetBtn = tabs[(currentIdx - 1 + tabs.length) % tabs.length];
+      e.preventDefault();
+    }
+    if(targetBtn){
+      targetBtn.click();
+      targetBtn.focus();
+    }
   });
 });
 
 function bandTax(amount, bands){
+  // Calculate tax across multiple brackets
   // bands: [[lower, upper, rate], ...] applied to absolute income
   let tax = 0;
   for(const [lo, hi, rate] of bands){
@@ -428,6 +491,7 @@ function renderPaywalled(box, calcKey, fullHtml, price){
   if(sessionStorage.getItem('sidework-' + calcKey + '-paid') === '1'){
     box.innerHTML = fullHtml + `<div class="r-note">Unlocked — thanks for paying.</div>`;
     box.classList.add('show');
+    box.classList.remove('error');
     return;
   }
 
@@ -440,6 +504,12 @@ function renderPaywalled(box, calcKey, fullHtml, price){
     </div>
   `;
   box.classList.add('show');
+  box.classList.remove('error');
+}
+
+function renderError(box, message){
+  box.innerHTML = `<strong>${message}</strong>`;
+  box.classList.add('show', 'error');
 }
 
 // If returning from a successful payment (?paid=uk or ?paid=us), unlock and
@@ -454,11 +524,16 @@ function renderPaywalled(box, calcKey, fullHtml, price){
       const box = document.getElementById(paid + '-receipt');
       box.innerHTML = stored + `<div class="r-note">Unlocked — thanks for paying.</div>`;
       box.classList.add('show');
+      box.classList.remove('error');
     }
     // switch to the right tab
-    document.querySelectorAll('.tab').forEach(b=>b.classList.remove('active'));
+    document.querySelectorAll('.tab').forEach(b=>{
+      b.classList.remove('active');
+      b.setAttribute('aria-selected', 'false');
+    });
     document.querySelectorAll('.panel').forEach(p=>p.classList.remove('active'));
     document.querySelector(`.tab[data-tab="${paid}"]`).classList.add('active');
+    document.querySelector(`.tab[data-tab="${paid}"]`).setAttribute('aria-selected', 'true');
     document.getElementById('panel-' + paid).classList.add('active');
     // clean the URL so a refresh doesn't re-trigger anything odd
     window.history.replaceState({}, '', window.location.pathname);
@@ -466,19 +541,46 @@ function renderPaywalled(box, calcKey, fullHtml, price){
 })();
 
 // ---------- UK ----------
+// 2026/27 UK tax year rates
 const UK_INCOME_BANDS = [
-  [0, 12570, 0],
-  [12570, 50270, 0.20],
-  [50270, 125140, 0.40],
-  [125140, Infinity, 0.45]
+  [0, 12570, 0],        // Personal allowance (no tax)
+  [12570, 50270, 0.20], // Basic rate
+  [50270, 125140, 0.40],// Higher rate
+  [125140, Infinity, 0.45] // Additional rate
 ];
+// Class 2 & 4 National Insurance rates for self-employed
 const UK_NI_BANDS = [
-  [0, 12570, 0],
-  [12570, 50270, 0.06],
-  [50270, Infinity, 0.02]
+  [0, 12570, 0],        // Below threshold
+  [12570, 50270, 0.06], // 6% on profits between threshold and upper limit
+  [50270, Infinity, 0.02] // 2% on profits above upper limit
 ];
 
+function validateUKInputs(){
+  const gross = document.getElementById('uk-gross');
+  const expenses = document.getElementById('uk-expenses');
+  const other = document.getElementById('uk-other');
+  
+  let valid = true;
+  
+  [gross, expenses, other].forEach(input => {
+    const fieldDiv = input.closest('.field');
+    const val = parseFloat(input.value);
+    if(input.required && (input.value === '' || isNaN(val) || val < 0)){
+      fieldDiv.classList.add('has-error');
+      input.parentElement.classList.add('error');
+      valid = false;
+    } else {
+      fieldDiv.classList.remove('has-error');
+      input.parentElement.classList.remove('error');
+    }
+  });
+  
+  return valid;
+}
+
 function calcUK(){
+  if(!validateUKInputs()) return;
+
   const gross = parseFloat(document.getElementById('uk-gross').value) || 0;
   const expenses = parseFloat(document.getElementById('uk-expenses').value) || 0;
   const other = parseFloat(document.getElementById('uk-other').value) || 0;
@@ -493,7 +595,7 @@ function calcUK(){
     const fullHtml = `
       <div class="r-line"><span>Gross income</span><span class="amt">${fmtGBP(gross)}</span></div>
       <div class="r-line total take"><span>Tax owed</span><span class="amt">£0.00</span></div>
-      <div class="r-note">You're within the £1,000 trading allowance, so this income is tax-free and you typically don't need to tell HMRC about it. Note this £1,000 is a combined total across <em>all</em> your side hustles — if you add another one, check the total together.</div>
+      <div class="r-note">You're within the £1,000 trading allowance, so this income is tax-free and you typically don't need to tell HMRC about it. Note: this £1,000 is a combined total across all your self-employed and trading activities, not per platform.</div>
     `;
     renderPaywalled(box, 'uk', fullHtml, '99p');
     return;
@@ -517,9 +619,9 @@ function calcUK(){
     <div class="r-line"><span>${usedActual ? 'Actual expenses claimed' : '£1,000 trading allowance used'}</span><span class="amt">−${fmtGBP(deduction)}</span></div>
     <div class="r-line"><span>Taxable profit</span><span class="amt">${fmtGBP(profit)}</span></div>
     <div class="r-line"><span>Income tax on this profit</span><span class="amt">−${fmtGBP(incomeTaxOnProfit)}</span></div>
-    <div class="r-line"><span>Class 4 National Insurance</span><span class="amt">−${fmtGBP(ni)}</span></div>
+    <div class="r-line"><span>Class 2 & 4 National Insurance</span><span class="amt">−${fmtGBP(ni)}</span></div>
     <div class="r-line total take"><span>Estimated take-home</span><span class="amt">${fmtGBP(takeHome)}</span></div>
-    <div class="r-note">You'd owe roughly ${fmtGBP(totalOwed)} in total (about ${effRate.toFixed(1)}% of profit). This assumes rest-of-UK tax bands and that you're registered for Self Assessment. If your side hustle profit pushes your total income near £100,000, your Personal Allowance starts to taper — this calculator doesn't account for that.</div>
+    <div class="r-note">You'd owe roughly ${fmtGBP(totalOwed)} in total (about ${effRate.toFixed(1)}% of profit). This assumes rest-of-UK tax bands and that you're registered for Self Assessment. Your actual liability depends on your full circumstances — confirm with a tax adviser before filing.</div>
   `;
   renderPaywalled(box, 'uk', fullHtml, '99p');
 }
@@ -547,15 +649,26 @@ const STATE_RATES = {
   "West Virginia": 0.0482, "Wisconsin": 0.0765, "Wyoming": 0
 };
 
+// Populate state dropdown
 (function populateStates(){
   const sel = document.getElementById('us-state');
-  Object.keys(STATE_RATES).forEach(name=>{
+  // Set first option
+  const defaultOpt = document.createElement('option');
+  defaultOpt.value = '0';
+  defaultOpt.textContent = 'No state selected';
+  defaultOpt.selected = true;
+  sel.appendChild(defaultOpt);
+  
+  // Add remaining states
+  Object.keys(STATE_RATES).filter(name => name !== 'No state selected').forEach(name=>{
     const opt = document.createElement('option');
     opt.value = STATE_RATES[name];
     opt.textContent = name;
     sel.appendChild(opt);
   });
 })();
+
+// 2026 Federal tax brackets
 const US_BRACKETS = {
   single: [
     [0, 12400, 0.10],[12400, 50400, 0.12],[50400, 105700, 0.22],
@@ -570,18 +683,55 @@ const US_BRACKETS = {
     [105700, 201775, 0.24],[201775, 256225, 0.32],[256225, 640600, 0.35],[640600, Infinity, 0.37]
   ]
 };
+
+// Self-employment tax wage base: income above this threshold is taxed at 2.9% instead of 15.3%
 const SE_WAGE_BASE = 184500;
 
 function seTax(netProfit){
+  // Self-employment tax calculation for 1099 / gig income
+  // Minimum threshold: $400 net profit triggers SE tax
   if(netProfit < 400) return 0;
+  
+  // SE income is 92.35% of net profit (the self-employment portion)
   const seIncome = netProfit * 0.9235;
+  
+  // 15.3% on income up to wage base, then 2.9% above
   if(seIncome <= SE_WAGE_BASE){
     return seIncome * 0.153;
   }
   return SE_WAGE_BASE * 0.153 + (seIncome - SE_WAGE_BASE) * 0.029;
 }
 
+function validateUSInputs(){
+  const gross = document.getElementById('us-gross');
+  const expenses = document.getElementById('us-expenses');
+  const other = document.getElementById('us-other');
+  
+  let valid = true;
+  
+  [gross, expenses, other].forEach(input => {
+    const fieldDiv = input.closest('.field');
+    const val = parseFloat(input.value);
+    if(input.required && (input.value === '' || isNaN(val) || val < 0)){
+      fieldDiv.classList.add('has-error');
+      if(input.parentElement.classList.contains('input-money')){
+        input.parentElement.classList.add('error');
+      }
+      valid = false;
+    } else {
+      fieldDiv.classList.remove('has-error');
+      if(input.parentElement.classList.contains('input-money')){
+        input.parentElement.classList.remove('error');
+      }
+    }
+  });
+  
+  return valid;
+}
+
 function calcUS(){
+  if(!validateUSInputs()) return;
+
   const gross = parseFloat(document.getElementById('us-gross').value) || 0;
   const expenses = parseFloat(document.getElementById('us-expenses').value) || 0;
   const other = parseFloat(document.getElementById('us-other').value) || 0;
@@ -624,11 +774,11 @@ function calcUS(){
     <div class="r-line"><span>Gross income</span><span class="amt">${fmtUSD(gross)}</span></div>
     <div class="r-line"><span>Business expenses</span><span class="amt">−${fmtUSD(expenses)}</span></div>
     <div class="r-line"><span>Net profit</span><span class="amt">${fmtUSD(netProfit)}</span></div>
-    <div class="r-line"><span>Self-employment tax (15.3%)</span><span class="amt">−${fmtUSD(se)}</span></div>
+    <div class="r-line"><span>Self-employment tax (15.3% / 2.9%)</span><span class="amt">−${fmtUSD(se)}</span></div>
     <div class="r-line"><span>Federal income tax on this profit</span><span class="amt">−${fmtUSD(incomeTaxOnProfit)}</span></div>
     ${stateLine}
     <div class="r-line total take"><span>Estimated take-home</span><span class="amt">${fmtUSD(takeHome)}</span></div>
-    <div class="r-note">You'd owe roughly ${fmtUSD(totalOwed)} in total (about ${effRate.toFixed(1)}% of net profit)${stateRate > 0 ? ', including a simplified state estimate' : ''}. If net profit is under $400, the IRS generally doesn't require self-employment tax, though income tax can still apply. If your quarterly total tax owed looks like it'll exceed $1,000, the IRS usually expects estimated quarterly payments.</div>
+    <div class="r-note">You'd owe roughly ${fmtUSD(totalOwed)} in total (about ${effRate.toFixed(1)}% of net profit)${stateRate > 0 ? ', including a simplified state estimate' : ''}. If net profit is under $400, you may not owe federal SE tax. State tax estimates may overstate for lower incomes. Confirm with a tax adviser before filing.</div>
   `;
   renderPaywalled(box, 'us', fullHtml, '99¢');
 }

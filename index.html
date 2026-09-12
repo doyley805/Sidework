@@ -260,31 +260,13 @@
     line-height: 1.5;
   }
 
-  .download-btn{
-    display:inline-block;
-    margin-top: 16px;
-    background: var(--mustard);
-    color: var(--ink);
-    border: none;
-    padding: 11px 18px;
-    font-family: 'Space Mono', monospace;
-    font-size: 13px;
-    font-weight: 700;
-    border-radius: 5px;
-    cursor: pointer;
-    letter-spacing: 0.02em;
-    text-decoration: none;
-    transition: opacity 0.2s ease;
-  }
-  .download-btn:hover{ opacity: 0.9; }
-  .download-btn:focus{ outline: 2px solid var(--ink); outline-offset: 2px; }
-
   .paywall{
     border: 1px dashed var(--ink-soft);
     border-radius: 6px;
     padding: 18px;
     text-align: center;
     background: var(--paper-2);
+    margin-top: 18px;
   }
   .paywall p{
     margin: 0 0 12px;
@@ -301,6 +283,11 @@
     user-select: none;
     pointer-events: none;
     margin-bottom: 14px;
+  }
+
+  /* Stripe buy button styling */
+  .stripe-button-container{
+    margin: 16px 0;
   }
 
   .stamp-mark{
@@ -430,6 +417,9 @@
 
 </div>
 
+<!-- Stripe Buy Button Script -->
+<script async src="https://js.stripe.com/v3/buy-button.js"></script>
+
 <script>
 function fmtGBP(n){ return '£' + n.toLocaleString('en-GB', {minimumFractionDigits:2, maximumFractionDigits:2}); }
 function fmtUSD(n){ return '$' + n.toLocaleString('en-US', {minimumFractionDigits:2, maximumFractionDigits:2}); }
@@ -480,31 +470,50 @@ function bandTax(amount, bands){
   return tax;
 }
 
-// Placeholder Stripe Payment Links — replace with the real links, and set
-// each one's "after payment" success URL to this page with ?paid=uk or
-// ?paid=us appended so the result unlocks automatically on return.
-const STRIPE_LINKS = { uk: '#', us: '#' };
-
 function renderPaywalled(box, calcKey, fullHtml, price){
-  sessionStorage.setItem('sidework-' + calcKey + '-result', fullHtml);
+  // Store in localStorage (persistent across sessions, devices)
+  localStorage.setItem('sidework-' + calcKey + '-result', fullHtml);
 
-  if(sessionStorage.getItem('sidework-' + calcKey + '-paid') === '1'){
-    box.innerHTML = fullHtml + `<div class="r-note">Unlocked — thanks for paying.</div>`;
+  // Check if already paid (stored in localStorage)
+  if(localStorage.getItem('sidework-' + calcKey + '-paid') === '1'){
+    box.innerHTML = fullHtml + `<div class="r-note">✓ Unlocked — thanks for your purchase!</div>`;
     box.classList.add('show');
     box.classList.remove('error');
     return;
   }
 
+  // Show paywall with Stripe button
   box.innerHTML = `
     <div class="blur-preview">${fullHtml}</div>
     <div class="paywall">
-      <p>Your breakdown is ready. Unlock it for ${price} to see the full numbers.</p>
-      <a class="download-btn" href="${STRIPE_LINKS[calcKey]}" target="_blank" rel="noopener">Unlock for ${price}</a>
-      <p class="hint">You'll come straight back here with your figures unlocked once payment goes through.</p>
+      <p>Your breakdown is ready. Unlock the full details for ${price}.</p>
+      <div class="stripe-button-container" id="stripe-${calcKey}"></div>
+      <p class="hint">You'll be redirected back here with your figures unlocked once payment is complete.</p>
     </div>
   `;
   box.classList.add('show');
   box.classList.remove('error');
+  
+  // Render Stripe buy button
+  renderStripeBuyButton(calcKey);
+}
+
+function renderStripeBuyButton(calcKey){
+  const container = document.getElementById(`stripe-${calcKey}`);
+  
+  const buyButtonId = calcKey === 'uk' 
+    ? 'buy_btn_1UEyo7ENIQF4G1X80nMSVdkY'
+    : 'buy_btn_1UEyo7ENIQF4G1X80nMSVdkY'; // Update with US button ID when available
+  
+  // Clear any existing button
+  container.innerHTML = '';
+  
+  // Create the stripe-buy-button element
+  const buyButton = document.createElement('stripe-buy-button');
+  buyButton.setAttribute('buy-button-id', buyButtonId);
+  buyButton.setAttribute('publishable-key', 'pk_live_51UEHhpENIQF4G1X8bJwTEW8Veot1wgQiXXm4OdZQtBDANmUjn7IInZ1jgBvuKm96HEFEJi66RtxGYBQnCvZ3gTpP00niq2bsz5');
+  
+  container.appendChild(buyButton);
 }
 
 function renderError(box, message){
@@ -512,21 +521,21 @@ function renderError(box, message){
   box.classList.add('show', 'error');
 }
 
-// If returning from a successful payment (?paid=uk or ?paid=us), unlock and
-// re-render whatever was last calculated for that calculator.
+// Check if returning from a successful payment
 (function checkPaymentReturn(){
   const params = new URLSearchParams(window.location.search);
   const paid = params.get('paid');
   if(paid === 'uk' || paid === 'us'){
-    sessionStorage.setItem('sidework-' + paid + '-paid', '1');
-    const stored = sessionStorage.getItem('sidework-' + paid + '-result');
+    // Mark as paid in localStorage (persistent across sessions & devices)
+    localStorage.setItem('sidework-' + paid + '-paid', '1');
+    const stored = localStorage.getItem('sidework-' + paid + '-result');
     if(stored){
       const box = document.getElementById(paid + '-receipt');
-      box.innerHTML = stored + `<div class="r-note">Unlocked — thanks for paying.</div>`;
+      box.innerHTML = stored + `<div class="r-note">✓ Unlocked — thanks for your purchase!</div>`;
       box.classList.add('show');
       box.classList.remove('error');
     }
-    // switch to the right tab
+    // Switch to the right tab
     document.querySelectorAll('.tab').forEach(b=>{
       b.classList.remove('active');
       b.setAttribute('aria-selected', 'false');
@@ -535,9 +544,22 @@ function renderError(box, message){
     document.querySelector(`.tab[data-tab="${paid}"]`).classList.add('active');
     document.querySelector(`.tab[data-tab="${paid}"]`).setAttribute('aria-selected', 'true');
     document.getElementById('panel-' + paid).classList.add('active');
-    // clean the URL so a refresh doesn't re-trigger anything odd
+    // Clean the URL so a refresh doesn't re-trigger anything odd
     window.history.replaceState({}, '', window.location.pathname);
   }
+})();
+
+// Check on page load if user has already purchased (from localStorage)
+(function checkExistingPurchase(){
+  ['uk', 'us'].forEach(calcKey => {
+    const isPaid = localStorage.getItem('sidework-' + calcKey + '-paid') === '1';
+    const stored = localStorage.getItem('sidework-' + calcKey + '-result');
+    if(isPaid && stored){
+      const box = document.getElementById(calcKey + '-receipt');
+      box.innerHTML = stored + `<div class="r-note">✓ Unlocked — your previous purchase.</div>`;
+      box.classList.add('show');
+    }
+  });
 })();
 
 // ---------- UK ----------

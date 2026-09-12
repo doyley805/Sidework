@@ -424,6 +424,19 @@
 function fmtGBP(n){ return '£' + n.toLocaleString('en-GB', {minimumFractionDigits:2, maximumFractionDigits:2}); }
 function fmtUSD(n){ return '$' + n.toLocaleString('en-US', {minimumFractionDigits:2, maximumFractionDigits:2}); }
 
+// Encode/Decode helper for storing HTML in URL
+function encodeToBase64(str) {
+  return btoa(unescape(encodeURIComponent(str)));
+}
+
+function decodeFromBase64(str) {
+  try {
+    return decodeURIComponent(escape(atob(str)));
+  } catch(e) {
+    return null;
+  }
+}
+
 // Tab navigation with proper a11y
 document.querySelectorAll('.tab').forEach((btn, idx)=>{
   btn.id = btn.id || `tab-${btn.dataset.tab}`;
@@ -474,13 +487,16 @@ function renderPaywalled(box, calcKey, fullHtml, price){
   // Store in localStorage (persistent across sessions, devices)
   localStorage.setItem('sidework-' + calcKey + '-result', fullHtml);
 
-  // Check if already paid (stored in localStorage)
+  // Check if already paid (from URL or localStorage)
   if(localStorage.getItem('sidework-' + calcKey + '-paid') === '1'){
     box.innerHTML = fullHtml + `<div class="r-note">✓ Unlocked — thanks for your purchase!</div>`;
     box.classList.add('show');
     box.classList.remove('error');
     return;
   }
+
+  // Encode the result to include in Stripe redirect URL
+  const encodedResult = encodeToBase64(fullHtml);
 
   // Show paywall with Stripe button
   box.innerHTML = `
@@ -495,10 +511,10 @@ function renderPaywalled(box, calcKey, fullHtml, price){
   box.classList.remove('error');
   
   // Render Stripe buy button
-  renderStripeBuyButton(calcKey);
+  renderStripeBuyButton(calcKey, encodedResult);
 }
 
-function renderStripeBuyButton(calcKey){
+function renderStripeBuyButton(calcKey, encodedResult){
   const container = document.getElementById(`stripe-${calcKey}`);
   
   const buyButtonId = calcKey === 'uk' 
@@ -508,10 +524,14 @@ function renderStripeBuyButton(calcKey){
   // Clear any existing button
   container.innerHTML = '';
   
+  // Build success URL with encoded result
+  const successUrl = `${window.location.origin}${window.location.pathname}?paid=${calcKey}&data=${encodedResult}`;
+  
   // Create the stripe-buy-button element
   const buyButton = document.createElement('stripe-buy-button');
   buyButton.setAttribute('buy-button-id', buyButtonId);
   buyButton.setAttribute('publishable-key', 'pk_live_51UEHhpENIQF4G1X8bJwTEW8Veot1wgQiXXm4OdZQtBDANmUjn7IInZ1jgBvuKm96HEFEJi66RtxGYBQnCvZ3gTpP00niq2bsz5');
+  buyButton.setAttribute('success-url', successUrl);
   
   container.appendChild(buyButton);
 }
@@ -521,20 +541,37 @@ function renderError(box, message){
   box.classList.add('show', 'error');
 }
 
-// Check if returning from a successful payment
+// Check if returning from a successful payment with encoded data in URL
 (function checkPaymentReturn(){
   const params = new URLSearchParams(window.location.search);
   const paid = params.get('paid');
+  const encodedData = params.get('data');
+  
   if(paid === 'uk' || paid === 'us'){
     // Mark as paid in localStorage (persistent across sessions & devices)
     localStorage.setItem('sidework-' + paid + '-paid', '1');
-    const stored = localStorage.getItem('sidework-' + paid + '-result');
-    if(stored){
+    
+    // Try to decode the result from URL
+    let resultHtml = null;
+    if(encodedData){
+      resultHtml = decodeFromBase64(encodedData);
+    }
+    
+    // If URL has data, use it. Otherwise fall back to localStorage.
+    if(!resultHtml){
+      resultHtml = localStorage.getItem('sidework-' + paid + '-result');
+    } else {
+      // Store it for future reference
+      localStorage.setItem('sidework-' + paid + '-result', resultHtml);
+    }
+    
+    if(resultHtml){
       const box = document.getElementById(paid + '-receipt');
-      box.innerHTML = stored + `<div class="r-note">✓ Unlocked — thanks for your purchase!</div>`;
+      box.innerHTML = resultHtml + `<div class="r-note">✓ Unlocked — thanks for your purchase!</div>`;
       box.classList.add('show');
       box.classList.remove('error');
     }
+    
     // Switch to the right tab
     document.querySelectorAll('.tab').forEach(b=>{
       b.classList.remove('active');
@@ -544,6 +581,7 @@ function renderError(box, message){
     document.querySelector(`.tab[data-tab="${paid}"]`).classList.add('active');
     document.querySelector(`.tab[data-tab="${paid}"]`).setAttribute('aria-selected', 'true');
     document.getElementById('panel-' + paid).classList.add('active');
+    
     // Clean the URL so a refresh doesn't re-trigger anything odd
     window.history.replaceState({}, '', window.location.pathname);
   }

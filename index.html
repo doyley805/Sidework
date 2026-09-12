@@ -1,0 +1,638 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Sidework — side hustle tax calculator</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,500;9..144,600&family=Space+Mono:wght@400;700&family=Work+Sans:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --bg: #1B2320;
+    --bg-2: #141B18;
+    --paper: #E3DFCF;
+    --paper-2: #D9D4BF;
+    --ink: #22201A;
+    --ink-soft: #55503F;
+    --stamp: #2C4A5E;
+    --stamp-2: #3E6580;
+    --mustard: #C98A2B;
+    --line: #22201A22;
+    --cream-text: #ECE8DC;
+    --good: #3F6B4A;
+  }
+  *{ box-sizing: border-box; }
+  html,body{ margin:0; padding:0; }
+  body{
+    background: var(--bg);
+    color: var(--cream-text);
+    font-family: 'Work Sans', sans-serif;
+    line-height: 1.5;
+    -webkit-font-smoothing: antialiased;
+  }
+  .wrap{
+    max-width: 760px;
+    margin: 0 auto;
+    padding: 32px 20px 80px;
+  }
+  header.top{
+    display:flex;
+    align-items: baseline;
+    justify-content: space-between;
+    margin-bottom: 18px;
+    flex-wrap: wrap;
+    gap: 8px;
+  }
+  .logo{
+    font-family: 'Fraunces', serif;
+    font-size: 28px;
+    font-weight: 600;
+    letter-spacing: -0.01em;
+    color: var(--cream-text);
+  }
+  .logo span{ color: var(--mustard); }
+  .tagline{
+    font-family: 'Space Mono', monospace;
+    font-size: 12px;
+    color: #ECE8DC99;
+  }
+
+  .notice{
+    background: var(--stamp);
+    color: var(--cream-text);
+    border-radius: 3px;
+    padding: 14px 16px;
+    font-size: 14px;
+    margin-bottom: 24px;
+    border-left: 4px solid var(--mustard);
+  }
+  .notice strong{ color: var(--mustard); }
+
+  .tabs{
+    display:flex;
+    gap: 4px;
+    margin-bottom: 0;
+  }
+  .tab{
+    font-family: 'Space Mono', monospace;
+    font-size: 13px;
+    padding: 10px 18px;
+    background: var(--bg-2);
+    color: #ECE8DC88;
+    border: none;
+    border-radius: 6px 6px 0 0;
+    cursor: pointer;
+    letter-spacing: 0.02em;
+  }
+  .tab.active{
+    background: var(--paper);
+    color: var(--ink);
+    font-weight: 700;
+  }
+
+  .sheet{
+    background: var(--paper);
+    color: var(--ink);
+    border-radius: 0 8px 8px 8px;
+    padding: 28px 26px 26px;
+    position: relative;
+    overflow: hidden;
+  }
+
+  .panel{ display:none; }
+  .panel.active{ display:block; }
+
+  h2.sheet-title{
+    font-family: 'Fraunces', serif;
+    font-weight: 500;
+    font-size: 22px;
+    margin: 0 0 4px;
+  }
+  .sheet-sub{
+    font-size: 13px;
+    color: var(--ink-soft);
+    margin: 0 0 22px;
+  }
+
+  .field{
+    margin-bottom: 16px;
+  }
+  .field label{
+    display:block;
+    font-size: 13px;
+    font-weight: 600;
+    margin-bottom: 6px;
+  }
+  .field .hint{
+    font-size: 12px;
+    color: var(--ink-soft);
+    margin-top: 4px;
+  }
+  .input-money{
+    display:flex;
+    align-items:center;
+    background: #fff;
+    border: 1px solid var(--line);
+    border-radius: 5px;
+    overflow: hidden;
+  }
+  .input-money span{
+    padding: 10px 10px 10px 12px;
+    font-family: 'Space Mono', monospace;
+    color: var(--ink-soft);
+    font-size: 14px;
+  }
+  .input-money input, select.plain{
+    border: none;
+    outline: none;
+    padding: 10px 12px 10px 4px;
+    font-family: 'Space Mono', monospace;
+    font-size: 15px;
+    width: 100%;
+    background: transparent;
+    color: var(--ink);
+  }
+  select.plain{
+    background: #fff;
+    border: 1px solid var(--line);
+    border-radius: 5px;
+    padding: 10px 12px;
+    font-family: 'Work Sans', sans-serif;
+    width: 100%;
+  }
+  .row2{
+    display:grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 14px;
+  }
+  @media (max-width: 520px){
+    .row2{ grid-template-columns: 1fr; }
+  }
+
+  .checkline{
+    display:flex;
+    align-items:flex-start;
+    gap: 8px;
+    font-size: 13px;
+    margin-top: 4px;
+  }
+  .checkline input{ margin-top: 3px; }
+
+  button.calc{
+    margin-top: 6px;
+    width: 100%;
+    background: var(--stamp);
+    color: var(--cream-text);
+    border: none;
+    padding: 13px 16px;
+    font-family: 'Space Mono', monospace;
+    font-size: 14px;
+    font-weight: 700;
+    border-radius: 5px;
+    cursor: pointer;
+    letter-spacing: 0.03em;
+  }
+  button.calc:hover{ background: var(--stamp-2); }
+
+  .receipt{
+    margin-top: 22px;
+    border-top: 1px dashed var(--ink-soft);
+    padding-top: 18px;
+    display:none;
+    position: relative;
+  }
+  .receipt.show{ display:block; }
+  .r-line{
+    display:flex;
+    justify-content: space-between;
+    font-family: 'Space Mono', monospace;
+    font-size: 13.5px;
+    padding: 5px 0;
+    border-bottom: 1px dotted var(--line);
+  }
+  .r-line.total{
+    font-weight: 700;
+    font-size: 15px;
+    border-bottom: none;
+    border-top: 1px solid var(--ink);
+    margin-top: 6px;
+    padding-top: 10px;
+  }
+  .r-line .amt{ white-space: nowrap; margin-left: 12px; }
+  .r-line.take .amt{ color: var(--good); }
+  .r-note{
+    font-size: 12px;
+    color: var(--ink-soft);
+    margin-top: 10px;
+    line-height: 1.5;
+  }
+
+  .download-btn{
+    display:inline-block;
+    margin-top: 16px;
+    background: var(--mustard);
+    color: var(--ink);
+    border: none;
+    padding: 11px 18px;
+    font-family: 'Space Mono', monospace;
+    font-size: 13px;
+    font-weight: 700;
+    border-radius: 5px;
+    cursor: pointer;
+    letter-spacing: 0.02em;
+    text-decoration: none;
+  }
+  .download-btn:hover{ opacity: 0.9; }
+
+  .paywall{
+    border: 1px dashed var(--ink-soft);
+    border-radius: 6px;
+    padding: 18px;
+    text-align: center;
+    background: var(--paper-2);
+  }
+  .paywall p{
+    margin: 0 0 12px;
+    font-size: 13.5px;
+  }
+  .paywall .hint{
+    font-size: 11.5px;
+    color: var(--ink-soft);
+    margin-top: 10px;
+    margin-bottom: 0;
+  }
+  .blur-preview{
+    filter: blur(5px);
+    user-select: none;
+    pointer-events: none;
+    margin-bottom: 14px;
+  }
+
+  .stamp-mark{
+    position: absolute;
+    top: -4px;
+    right: 6px;
+    font-family: 'Space Mono', monospace;
+    font-size: 11px;
+    font-weight: 700;
+    letter-spacing: 0.06em;
+    color: var(--mustard);
+    border: 2px solid var(--mustard);
+    padding: 4px 8px;
+    border-radius: 4px;
+    transform: rotate(6deg);
+    opacity: 0.85;
+  }
+
+  footer{
+    max-width: 760px;
+    margin: 28px auto 0;
+    padding: 0 20px;
+    font-size: 11.5px;
+    color: #ECE8DC77;
+    line-height: 1.6;
+  }
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <header class="top">
+    <div class="logo">side<span>work</span></div>
+    <div class="tagline">know your take-home before HMRC or the IRS do</div>
+  </header>
+
+  <div class="notice">
+    <strong>Not tax advice.</strong> Sidework gives a rough estimate using standard rates for the current tax year. It doesn't know your full circumstances — always confirm your actual figures with HMRC / IRS or a qualified accountant before filing or paying.
+  </div>
+
+  <div class="tabs">
+    <button class="tab active" data-tab="uk">🇬🇧 UK</button>
+    <button class="tab" data-tab="us">🇺🇸 USA</button>
+  </div>
+
+  <div class="sheet">
+
+    <!-- UK PANEL -->
+    <div class="panel active" id="panel-uk">
+      <div class="stamp-mark">NOT TAX ADVICE</div>
+      <h2 class="sheet-title">UK side hustle calculator</h2>
+      <p class="sheet-sub">For Vinted, eBay, Etsy, Uber, Deliveroo & similar self-employed income — 2026/27 tax year, rest-of-UK rates.</p>
+
+      <div class="field">
+        <label>Gross side hustle income this tax year</label>
+        <div class="input-money"><span>£</span><input type="number" id="uk-gross" placeholder="0" min="0" inputmode="decimal"></div>
+        <div class="hint">Total money in, before any expenses.</div>
+      </div>
+
+      <div class="field">
+        <label>Actual business expenses (optional)</label>
+        <div class="input-money"><span>£</span><input type="number" id="uk-expenses" placeholder="0" min="0" inputmode="decimal"></div>
+        <div class="hint">Sidework will use whichever is bigger — your expenses or the £1,000 trading allowance.</div>
+      </div>
+
+      <div class="field">
+        <label>Other taxable income this year (e.g. salary), if any</label>
+        <div class="input-money"><span>£</span><input type="number" id="uk-other" placeholder="0" min="0" inputmode="decimal"></div>
+        <div class="hint">This affects which tax band your side hustle profit falls into. Leave at 0 if this is your only income.</div>
+      </div>
+
+      <button class="calc" onclick="calcUK()">Work it out</button>
+
+      <div class="receipt" id="uk-receipt"></div>
+    </div>
+
+    <!-- US PANEL -->
+    <div class="panel" id="panel-us">
+      <div class="stamp-mark">NOT TAX ADVICE</div>
+      <h2 class="sheet-title">USA side hustle calculator</h2>
+      <p class="sheet-sub">For 1099 / gig income — 2026 federal tax year. Federal only; state tax isn't included.</p>
+
+      <div class="field">
+        <label>Gross side hustle income this year</label>
+        <div class="input-money"><span>$</span><input type="number" id="us-gross" placeholder="0" min="0" inputmode="decimal"></div>
+      </div>
+
+      <div class="field">
+        <label>Business expenses (mileage, supplies, fees, etc.)</label>
+        <div class="input-money"><span>$</span><input type="number" id="us-expenses" placeholder="0" min="0" inputmode="decimal"></div>
+        <div class="hint">The US has no flat allowance like the UK — only actual, deductible expenses count.</div>
+      </div>
+
+      <div class="row2">
+        <div class="field">
+          <label>Filing status</label>
+          <select class="plain" id="us-status">
+            <option value="single">Single</option>
+            <option value="mfj">Married filing jointly</option>
+            <option value="hoh">Head of household</option>
+          </select>
+        </div>
+        <div class="field">
+          <label>Other taxable income (e.g. W-2 job)</label>
+          <div class="input-money"><span>$</span><input type="number" id="us-other" placeholder="0" min="0" inputmode="decimal"></div>
+        </div>
+      </div>
+
+      <div class="field">
+        <label>State</label>
+        <select class="plain" id="us-state"></select>
+        <div class="hint">Optional — adds an estimated state tax line. Flat-rate states use their actual rate; graduated states use their top marginal rate as a simplified stand-in, so it can overstate tax at lower income levels.</div>
+      </div>
+
+      <button class="calc" onclick="calcUS()">Work it out</button>
+
+      <div class="receipt" id="us-receipt"></div>
+    </div>
+
+  </div>
+
+  <footer>
+    Sidework is a free estimator, not a filing service or professional adviser. Figures are based on published 2026 UK and US federal rates and thresholds and use simplified, standard assumptions (e.g. no Scottish tax bands, no state/local tax, no additional Medicare surtax, no personal allowance taper above £100k). Your actual liability may differ. Nothing on this page is tax, legal, or financial advice — for guidance specific to your situation, speak to HMRC, the IRS, or a qualified accountant.
+  </footer>
+
+</div>
+
+<script>
+function fmtGBP(n){ return '£' + n.toLocaleString('en-GB', {minimumFractionDigits:2, maximumFractionDigits:2}); }
+function fmtUSD(n){ return '$' + n.toLocaleString('en-US', {minimumFractionDigits:2, maximumFractionDigits:2}); }
+
+document.querySelectorAll('.tab').forEach(btn=>{
+  btn.addEventListener('click', ()=>{
+    document.querySelectorAll('.tab').forEach(b=>b.classList.remove('active'));
+    document.querySelectorAll('.panel').forEach(p=>p.classList.remove('active'));
+    btn.classList.add('active');
+    document.getElementById('panel-' + btn.dataset.tab).classList.add('active');
+  });
+});
+
+function bandTax(amount, bands){
+  // bands: [[lower, upper, rate], ...] applied to absolute income
+  let tax = 0;
+  for(const [lo, hi, rate] of bands){
+    if(amount > lo){
+      tax += (Math.min(amount, hi) - lo) * rate;
+    }
+  }
+  return tax;
+}
+
+// Placeholder Stripe Payment Links — replace with the real links, and set
+// each one's "after payment" success URL to this page with ?paid=uk or
+// ?paid=us appended so the result unlocks automatically on return.
+const STRIPE_LINKS = { uk: '#', us: '#' };
+
+function renderPaywalled(box, calcKey, fullHtml, price){
+  sessionStorage.setItem('sidework-' + calcKey + '-result', fullHtml);
+
+  if(sessionStorage.getItem('sidework-' + calcKey + '-paid') === '1'){
+    box.innerHTML = fullHtml + `<div class="r-note">Unlocked — thanks for paying.</div>`;
+    box.classList.add('show');
+    return;
+  }
+
+  box.innerHTML = `
+    <div class="blur-preview">${fullHtml}</div>
+    <div class="paywall">
+      <p>Your breakdown is ready. Unlock it for ${price} to see the full numbers.</p>
+      <a class="download-btn" href="${STRIPE_LINKS[calcKey]}" target="_blank" rel="noopener">Unlock for ${price}</a>
+      <p class="hint">You'll come straight back here with your figures unlocked once payment goes through.</p>
+    </div>
+  `;
+  box.classList.add('show');
+}
+
+// If returning from a successful payment (?paid=uk or ?paid=us), unlock and
+// re-render whatever was last calculated for that calculator.
+(function checkPaymentReturn(){
+  const params = new URLSearchParams(window.location.search);
+  const paid = params.get('paid');
+  if(paid === 'uk' || paid === 'us'){
+    sessionStorage.setItem('sidework-' + paid + '-paid', '1');
+    const stored = sessionStorage.getItem('sidework-' + paid + '-result');
+    if(stored){
+      const box = document.getElementById(paid + '-receipt');
+      box.innerHTML = stored + `<div class="r-note">Unlocked — thanks for paying.</div>`;
+      box.classList.add('show');
+    }
+    // switch to the right tab
+    document.querySelectorAll('.tab').forEach(b=>b.classList.remove('active'));
+    document.querySelectorAll('.panel').forEach(p=>p.classList.remove('active'));
+    document.querySelector(`.tab[data-tab="${paid}"]`).classList.add('active');
+    document.getElementById('panel-' + paid).classList.add('active');
+    // clean the URL so a refresh doesn't re-trigger anything odd
+    window.history.replaceState({}, '', window.location.pathname);
+  }
+})();
+
+// ---------- UK ----------
+const UK_INCOME_BANDS = [
+  [0, 12570, 0],
+  [12570, 50270, 0.20],
+  [50270, 125140, 0.40],
+  [125140, Infinity, 0.45]
+];
+const UK_NI_BANDS = [
+  [0, 12570, 0],
+  [12570, 50270, 0.06],
+  [50270, Infinity, 0.02]
+];
+
+function calcUK(){
+  const gross = parseFloat(document.getElementById('uk-gross').value) || 0;
+  const expenses = parseFloat(document.getElementById('uk-expenses').value) || 0;
+  const other = parseFloat(document.getElementById('uk-other').value) || 0;
+  const box = document.getElementById('uk-receipt');
+
+  if(gross <= 0){
+    box.classList.remove('show');
+    return;
+  }
+
+  if(gross <= 1000){
+    const fullHtml = `
+      <div class="r-line"><span>Gross income</span><span class="amt">${fmtGBP(gross)}</span></div>
+      <div class="r-line total take"><span>Tax owed</span><span class="amt">£0.00</span></div>
+      <div class="r-note">You're within the £1,000 trading allowance, so this income is tax-free and you typically don't need to tell HMRC about it. Note this £1,000 is a combined total across <em>all</em> your side hustles — if you add another one, check the total together.</div>
+    `;
+    renderPaywalled(box, 'uk', fullHtml, '99p');
+    return;
+  }
+
+  const deduction = Math.max(1000, expenses);
+  const usedActual = expenses > 1000;
+  const profit = Math.max(gross - deduction, 0);
+
+  const taxTotal = bandTax(other + profit, UK_INCOME_BANDS);
+  const taxOtherOnly = bandTax(other, UK_INCOME_BANDS);
+  const incomeTaxOnProfit = Math.max(taxTotal - taxOtherOnly, 0);
+
+  const ni = bandTax(profit, UK_NI_BANDS);
+  const totalOwed = incomeTaxOnProfit + ni;
+  const takeHome = profit - totalOwed;
+  const effRate = profit > 0 ? (totalOwed / profit) * 100 : 0;
+
+  const fullHtml = `
+    <div class="r-line"><span>Gross income</span><span class="amt">${fmtGBP(gross)}</span></div>
+    <div class="r-line"><span>${usedActual ? 'Actual expenses claimed' : '£1,000 trading allowance used'}</span><span class="amt">−${fmtGBP(deduction)}</span></div>
+    <div class="r-line"><span>Taxable profit</span><span class="amt">${fmtGBP(profit)}</span></div>
+    <div class="r-line"><span>Income tax on this profit</span><span class="amt">−${fmtGBP(incomeTaxOnProfit)}</span></div>
+    <div class="r-line"><span>Class 4 National Insurance</span><span class="amt">−${fmtGBP(ni)}</span></div>
+    <div class="r-line total take"><span>Estimated take-home</span><span class="amt">${fmtGBP(takeHome)}</span></div>
+    <div class="r-note">You'd owe roughly ${fmtGBP(totalOwed)} in total (about ${effRate.toFixed(1)}% of profit). This assumes rest-of-UK tax bands and that you're registered for Self Assessment. If your side hustle profit pushes your total income near £100,000, your Personal Allowance starts to taper — this calculator doesn't account for that.</div>
+  `;
+  renderPaywalled(box, 'uk', fullHtml, '99p');
+}
+
+// ---------- US ----------
+const US_STD_DEDUCTION = { single: 16100, mfj: 32200, hoh: 24150 };
+
+// Simplified state tax rates: 0 for no-income-tax states, the actual rate for
+// flat-tax states, and the top marginal rate for graduated states (used here
+// as a rough stand-in, not a full bracket calculation).
+const STATE_RATES = {
+  "No state selected": 0,
+  "Alabama": 0.05, "Alaska": 0, "Arizona": 0.025, "Arkansas": 0.037,
+  "California": 0.133, "Colorado": 0.044, "Connecticut": 0.0699, "Delaware": 0.066,
+  "Florida": 0, "Georgia": 0.0499, "Hawaii": 0.11, "Idaho": 0.058,
+  "Illinois": 0.0495, "Indiana": 0.0305, "Iowa": 0.038, "Kansas": 0.057,
+  "Kentucky": 0.035, "Louisiana": 0.03, "Maine": 0.0715, "Maryland": 0.0575,
+  "Massachusetts": 0.05, "Michigan": 0.0425, "Minnesota": 0.0985, "Mississippi": 0.04,
+  "Missouri": 0.047, "Montana": 0.059, "Nebraska": 0.0455, "Nevada": 0,
+  "New Hampshire": 0, "New Jersey": 0.1075, "New Mexico": 0.059, "New York": 0.109,
+  "North Carolina": 0.0399, "North Dakota": 0.025, "Ohio": 0.0275, "Oklahoma": 0.045,
+  "Oregon": 0.099, "Pennsylvania": 0.0307, "Rhode Island": 0.0599, "South Carolina": 0.0521,
+  "South Dakota": 0, "Tennessee": 0, "Texas": 0, "Utah": 0.0465,
+  "Vermont": 0.0875, "Virginia": 0.0575, "Washington": 0, "Washington DC": 0.1075,
+  "West Virginia": 0.0482, "Wisconsin": 0.0765, "Wyoming": 0
+};
+
+(function populateStates(){
+  const sel = document.getElementById('us-state');
+  Object.keys(STATE_RATES).forEach(name=>{
+    const opt = document.createElement('option');
+    opt.value = STATE_RATES[name];
+    opt.textContent = name;
+    sel.appendChild(opt);
+  });
+})();
+const US_BRACKETS = {
+  single: [
+    [0, 12400, 0.10],[12400, 50400, 0.12],[50400, 105700, 0.22],
+    [105700, 201775, 0.24],[201775, 256225, 0.32],[256225, 640600, 0.35],[640600, Infinity, 0.37]
+  ],
+  mfj: [
+    [0, 24800, 0.10],[24800, 100800, 0.12],[100800, 211400, 0.22],
+    [211400, 403550, 0.24],[403550, 512450, 0.32],[512450, 768700, 0.35],[768700, Infinity, 0.37]
+  ],
+  hoh: [
+    [0, 17700, 0.10],[17700, 67450, 0.12],[67450, 105700, 0.22],
+    [105700, 201775, 0.24],[201775, 256225, 0.32],[256225, 640600, 0.35],[640600, Infinity, 0.37]
+  ]
+};
+const SE_WAGE_BASE = 184500;
+
+function seTax(netProfit){
+  if(netProfit < 400) return 0;
+  const seIncome = netProfit * 0.9235;
+  if(seIncome <= SE_WAGE_BASE){
+    return seIncome * 0.153;
+  }
+  return SE_WAGE_BASE * 0.153 + (seIncome - SE_WAGE_BASE) * 0.029;
+}
+
+function calcUS(){
+  const gross = parseFloat(document.getElementById('us-gross').value) || 0;
+  const expenses = parseFloat(document.getElementById('us-expenses').value) || 0;
+  const other = parseFloat(document.getElementById('us-other').value) || 0;
+  const status = document.getElementById('us-status').value;
+  const stateRate = parseFloat(document.getElementById('us-state').value) || 0;
+  const stateName = document.getElementById('us-state').options[document.getElementById('us-state').selectedIndex].text;
+  const box = document.getElementById('us-receipt');
+
+  if(gross <= 0){
+    box.classList.remove('show');
+    return;
+  }
+
+  const netProfit = Math.max(gross - expenses, 0);
+  const std = US_STD_DEDUCTION[status];
+  const brackets = US_BRACKETS[status];
+
+  const se = seTax(netProfit);
+  const seHalfDeduction = se / 2;
+
+  const taxableWith = Math.max(other + netProfit - seHalfDeduction - std, 0);
+  const taxableWithout = Math.max(other - std, 0);
+
+  const taxWith = bandTax(taxableWith, brackets);
+  const taxWithout = bandTax(taxableWithout, brackets);
+  const incomeTaxOnProfit = Math.max(taxWith - taxWithout, 0);
+
+  const stateTax = netProfit * stateRate;
+  const totalOwed = se + incomeTaxOnProfit + stateTax;
+  const takeHome = netProfit - totalOwed;
+  const effRate = netProfit > 0 ? (totalOwed / netProfit) * 100 : 0;
+
+  const stateLine = stateRate > 0
+    ? `<div class="r-line"><span>Est. ${stateName} state tax</span><span class="amt">−${fmtUSD(stateTax)}</span></div>`
+    : (stateName !== "No state selected"
+        ? `<div class="r-line"><span>${stateName} state tax</span><span class="amt">$0.00</span></div>`
+        : '');
+
+  const fullHtml = `
+    <div class="r-line"><span>Gross income</span><span class="amt">${fmtUSD(gross)}</span></div>
+    <div class="r-line"><span>Business expenses</span><span class="amt">−${fmtUSD(expenses)}</span></div>
+    <div class="r-line"><span>Net profit</span><span class="amt">${fmtUSD(netProfit)}</span></div>
+    <div class="r-line"><span>Self-employment tax (15.3%)</span><span class="amt">−${fmtUSD(se)}</span></div>
+    <div class="r-line"><span>Federal income tax on this profit</span><span class="amt">−${fmtUSD(incomeTaxOnProfit)}</span></div>
+    ${stateLine}
+    <div class="r-line total take"><span>Estimated take-home</span><span class="amt">${fmtUSD(takeHome)}</span></div>
+    <div class="r-note">You'd owe roughly ${fmtUSD(totalOwed)} in total (about ${effRate.toFixed(1)}% of net profit)${stateRate > 0 ? ', including a simplified state estimate' : ''}. If net profit is under $400, the IRS generally doesn't require self-employment tax, though income tax can still apply. If your quarterly total tax owed looks like it'll exceed $1,000, the IRS usually expects estimated quarterly payments.</div>
+  `;
+  renderPaywalled(box, 'us', fullHtml, '99¢');
+}
+</script>
+
+</body>
+</html>
